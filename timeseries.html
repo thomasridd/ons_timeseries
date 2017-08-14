@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>Timeseries Tool</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="fullfact.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">ONS</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Timeseries <span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0" action="index.html">
+            <input class="form-control mr-sm-2" type="text" name="cdid" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="starter-template">
+        <h1>Office for National Statistics</h1>
+        <p class="lead">Timeseries api graph tool<br> Click any time series code</p>
+    </div>
+    <div class="col-md-12 col-lg-12"></div>
+        <div class = "row justify-content-center">
+            <div class="col-md-6" id="prev-page" align="right"></div>
+            <div class="col-md-6" id="next-page"></div>
+        </div>
+        <div class = "row justify-content-center">
+            <div class="col-md-8" id="timeseries-list"></div>
+        </div>
+    </div>
+
+</div><!-- /.container -->
+
+<script>
+
+</script>
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://fastcdn.org/Underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/data.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="../../../../assets/js/ie10-viewport-bug-workaround.js"></script>
+
+<script type="text/javascript">
+    $("#search").onclick = function () {
+        console.log('hello');
+        var cdid = $('#cdid').innerText;
+        var path = window.location.protocol + "//" + window.location.host + "/";
+
+        location.href = path + "index.html?cdid=" & cdid;
+    };
+</script>
+
+<script>
+
+    var getUrlParameter = function getUrlParameter(sParam) {
+        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : sParameterName[1];
+            }
+        }
+    };
+
+    var page = getUrlParameter('page');
+    var start = page ? 100 * page : 0;
+
+
+    if(page > 0) {
+        var prevHtml = '<a href="./timeseries.html?page=' + (page - 1) + '"><= previous</a>';
+        $('#prev-page').html(prevHtml);
+        var nextPage = Number(page)+Number(1);
+        var nextHtml = '<a href="./timeseries.html?page=' + nextPage + '">next =></a>';
+        $('#next-page').html(nextHtml);
+    }  else {
+        var nextHtml = '<a href="./timeseries.html?page=1">next =></a>';
+        $('#next-page').html(nextHtml);
+    }
+
+
+    var timeseriesListUrl =  'https://api.ons.gov.uk/timeseries?start=' + start + '&limit=100';
+
+    console.log(timeseriesListUrl);
+    $.ajax({url:timeseriesListUrl, context: document.body}).done(function(timeseriesList) {
+        var timeseries = _.map(timeseriesList.items, function(series) {
+           return {
+               cdid: series.description.cdid,
+               title: series.description.title
+           }
+        });
+        var seriesHtml = '';
+        for(var t in timeseries) {
+            var series = timeseries[t];
+            var html = '<li><span class="badge"><a href="./index.html?cdid=' + series.cdid + '">' + series.cdid + '</a></span>';
+            html = html + '<a href="./index.html?cdid=' + series.cdid + '">' + series.title + '</a></li>';
+
+            seriesHtml = seriesHtml + html;
+        }
+        $('#timeseries-list').html('<ul class="facts">' + seriesHtml + '</ul>')
+    });
+</script>
+
+</body>
+</html>
